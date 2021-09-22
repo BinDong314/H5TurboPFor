@@ -81,7 +81,12 @@ short zz_unmap(unsigned short n)
  * @param cd_nelmts: the # of values in  cd_values
  * @param cd_values: the pointer of the parameter 
  * 			cd_values[0]: type of data:  short (0),  int (1)
- *          cd_values[1]: 0/1 pre-processing method: zipzag  
+ *          cd_values[1]: pre-processing method: 
+ *                        0: nothing
+ *                        1: zipzag  
+ *                        2: abs
+ *                        3: plusabsmin
+ *  
  *          cd_values[2, -]: size of each dimension of a chunk 
  * @param nbytes : input data size
  * @param buf_size : output data size 
@@ -163,20 +168,65 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 		{
 		case ELEMENT_TYPE_SHORT:
 		{
+			clock_t t;
+			t = clock();
 			n = m * sizeof(unsigned short);
 			short *inbuf_short = *buf;
 			unsigned short *inbuf_ushort = malloc(CBUF(n) + 1024 * 1024);
-			if (cd_values[1])
+			switch (cd_values[1])
+			{
+			case 0:
+				printf("Warning: test only !\n");
+				memcpy(inbuf_ushort, inbuf_short, m * sizeof(unsigned short));
+				break;
+			case 1: //zigzag
 			{
 				for (int i = 0; i < m; i++)
 				{
 					inbuf_ushort[i] = zz_map(inbuf_short[i]);
 				}
+				break;
 			}
+			case 2: //abs
+			{
+				printf("Warning: test only , to add bit array at the end of output buf!\n");
+				//This is for test purpose, we need to deal with bitmap
+				for (int i = 0; i < m; i++)
+				{
+					inbuf_ushort[i] = abs(inbuf_short[i]);
+				}
+				break;
+			}
+			// case 3: //plusabsmin
+			// {
+			// 	printf("Warning: test only, to add min value at the end of output buf!\n");
+			// 	//This is for test purpose, we need to deal with bitmap
+			// 	short min_value =
+			// 	for (int i = 0; i < m; i++)
+			// 	{
+			// 	}
+			// 	for (int i = 0; i < m; i++)
+			// 	{
+			// 		inbuf_ushort[i] = abs(inbuf_short[i]);
+			// 	}
+			// 	break;
+			// }
+			default:
+				printf("Not supported cd_values[1] !\n");
+				goto error;
+			}
+
 			out = (unsigned char *)malloc(CBUF(n) + 1024 * 1024);
 			l = p4nenc16(inbuf_ushort, m, out); //l is the byte (n is byte too)
 			free(inbuf_ushort);
 			inbuf_ushort = NULL;
+
+			t = clock() - t;
+
+			double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
+			printf("p4nenc16() took %f seconds to execute \n", time_taken);
+			printf("H5TurboPfor Code: ratio = %f, origSize =%zu, compSize = %zu byte \n", (float)n / (float)l, n, l);
+
 			break;
 		}
 		default:

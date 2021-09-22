@@ -56,6 +56,9 @@ endif()
 include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 include_directories(SYSTEM ${turbopfor_INCLUDE_DIRS})
 
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+
 #target_link_libraries(my_mpi_target ${MPI_C_LIBRARIES})
 
 # HDF5 plugin as shared library
