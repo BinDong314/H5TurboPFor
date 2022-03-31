@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 2.8.12)
 project(turbopfor_hdf5plugin)
 
 # options
@@ -29,14 +29,17 @@ include_directories(${HDF5_INCLUDE_DIRS})
 
 find_package(MPI REQUIRED)
 
-set(turbopfor_ROOT_DIR /Users/dbin/work/soft/TurboPFor-Integer-Compression/build)
+##
+## Change here for a different place of TurboPFor-Integer-Compression
+##
+set(turbopfor_ROOT_DIR ./TurboPFor-Integer-Compression)
 find_path(turbopfor_INCLUDE_DIRS
   NAMES vp4.h
-  HINTS ${turbopfor_ROOT_DIR}/include)
+  HINTS ${turbopfor_ROOT_DIR}/)
 
 find_library(turbopfor_LIBRARIES
   NAMES ic
-  HINTS ${turbopfor_ROOT_DIR}/lib)
+  HINTS ${turbopfor_ROOT_DIR}/)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(turbopfor DEFAULT_MSG turbopfor_LIBRARIES turbopfor_INCLUDE_DIRS)

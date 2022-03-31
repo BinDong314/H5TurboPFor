@@ -74,6 +74,10 @@ short zz_unmap(unsigned short n)
 	return (n >> 1) ^ (-(n & 1));
 }
 
+#define SetBit(A, k) (A[(k / 32)] |= (1 << (k % 32)))
+#define ClearBit(A, k) (A[(k / 32)] &= ~(1 << (k % 32)))
+#define TestBit(A, k) (A[(k / 32)] & (1 << (k % 32)))
+
 /**
  * @brief the filter for Turbopfor
  * 
@@ -115,50 +119,99 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 		m = m * cd_values[i];
 	}
 
+	//unsigned char *A_bitmap_compressed;
+	//unsigned A_bitmap_compressed_size;
+
+	int32_t *A;
+	int A_n;
+	clock_t t;
+	t = clock();
 	if (flags & H5Z_FLAG_REVERSE)
 	{
-		/*
-		size_t decompSize = ZSTD_getDecompressedSize(*buf, origSize);
-		if (NULL == (outbuf = malloc(decompSize)))
-			goto error;
-		decompSize = ZSTD_decompress(outbuf, decompSize, inbuf, origSize);
-
-		if (*buf != NULL)
-			free(*buf);
-		*buf = outbuf;
-		outbuf = NULL;
-		ret_value = (size_t)decompSize;
-		*/
-
+		void *old_buf = *buf;
 		switch (cd_values[0])
 		{
 		case ELEMENT_TYPE_SHORT:
 		{
 			n = m * sizeof(unsigned short);
 			unsigned char *outbuf_short = (unsigned char *)malloc(CBUF(n) + 1024 * 1024);
-			p4ndec16((unsigned char *)*buf, m, (uint16_t *)outbuf_short);
-			unsigned short *inbuf_ushort = (unsigned short *)out;
 
+			if (cd_values[1] == 2)
+			{
+				//unsigned char *buf_new;
+				memcpy(&A_n, *buf, sizeof(int32_t));
+				A = malloc(sizeof(int32_t) * A_n);
+				memcpy(A, *buf + sizeof(int32_t), sizeof(int32_t) * A_n);
+				//memcpy(buf + sizeof(int32_t) + sizeof(int32_t) * A_n, l, out);
+				*buf = (char *)*buf + sizeof(int32_t) + sizeof(int32_t) * A_n;
+				//printf("Debug: decode A_n = %d, A[0, 1, 3]= %d, %d, %d\n", A_n, A[0], A[1], A[2]);
+			}
+
+			p4ndec16((unsigned char *)*buf, m, (uint16_t *)outbuf_short);
+			//unsigned short *inbuf_ushort = (unsigned short *)out;
 			n = m * sizeof(short);
 			out = (unsigned char *)malloc(n);
 			unsigned short *ushort_p = (unsigned short *)outbuf_short;
 			short *short_p = (short *)out;
-			if (cd_values[1])
+
+			// if (cd_values[1])
+			// {
+			// 	for (int i = 0; i < m; i++)
+			// 	{
+			// 		short_p[i] = zz_unmap(ushort_p[i]);
+			// 	}
+			// }
+
+			switch (cd_values[1])
+			{
+			case 0:
+				printf("Warning: test only !\n");
+				memcpy(ushort_p, short_p, m * sizeof(unsigned short));
+				break;
+			case 1: //zigzag
 			{
 				for (int i = 0; i < m; i++)
 				{
 					short_p[i] = zz_unmap(ushort_p[i]);
 				}
+				break;
 			}
-			break;
+			case 2: //abs
+			{
+				for (int i = 0; i < m; i++)
+				{
+					if (TestBit(A, i)) //Get bit for the positive value: 1
+					{
+						short_p[i] = ushort_p[i];
+					}
+					else
+					{
+						short_p[i] = -ushort_p[i];
+					}
+				}
+				free(A);
+				A = NULL;
+				break;
+			}
+			default:
+				printf("Not supported cd_values[1] !\n");
+				goto error;
+			}
 			free(outbuf_short);
+			outbuf_short = NULL;
+			break;
 		}
 		default:
 			printf("Not supported data type yet !\n");
 			goto error;
 		}
-		if (*buf != NULL)
-			free(*buf);
+
+		t = clock() - t;
+		double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
+		printf("H5TurboPfor dec : cost %f seconds  \n", time_taken);
+
+		if (old_buf != NULL)
+			free(old_buf);
 		*buf = out;
 		ret_value = n;
 	}
@@ -168,8 +221,6 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 		{
 		case ELEMENT_TYPE_SHORT:
 		{
-			clock_t t;
-			t = clock();
 			n = m * sizeof(unsigned short);
 			short *inbuf_short = *buf;
 			unsigned short *inbuf_ushort = malloc(CBUF(n) + 1024 * 1024);
@@ -189,28 +240,47 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 			}
 			case 2: //abs
 			{
-				printf("Warning: test only , to add bit array at the end of output buf!\n");
+				//int A_n;
+				if (m % 32 == 0)
+				{
+					A_n = m / 32;
+				}
+				else
+				{
+					A_n = m / 32 + 1;
+				}
+				//printf("A_n = %d !\n", A_n);
+				//int32_t A[A_n];
+				A = malloc(sizeof(int32_t) * A_n);
+
+				for (int i = 0; i < A_n; i++)
+					A[i] = 0; // Clear the bit array
+
+				//printf("Warning: test only , to add bit array at the end of output buf!\n");
 				//This is for test purpose, we need to deal with bitmap
 				for (int i = 0; i < m; i++)
 				{
-					inbuf_ushort[i] = abs(inbuf_short[i]);
+					if (inbuf_short[i] >= 0) //Set bit for the positive value to be 1
+					{
+						SetBit(A, i);
+						inbuf_ushort[i] = inbuf_short[i];
+					}
+					else
+					{
+						inbuf_ushort[i] = -inbuf_short[i];
+					}
 				}
+
+				printf("Debug: decode A_n = %d, A[0, 1, 3]= %d, %d, %d\n", A_n, A[0], A[1], A[2]);
+
+				//Compress A does not help here
+				//unsigned char *A_bitmap_compressed = (unsigned char *)malloc(CBUF(A_n * sizeof(int32_t)) + 1024 * 1024);
+				//A_bitmap_compressed_size is the byte (n is byte too)
+				//A_bitmap_compressed_size = p4nenc32(A, A_n, A_bitmap_compressed);
+				//printf("Bitmap: ratio = %f (origSize =%zu, compSize = %zu byte) \n", (float)(A_n * 4) / (float)A_bitmap_compressed_size, A_n * 4, A_bitmap_compressed_size);
+				//free(A_bitmap_compressed);
 				break;
 			}
-			// case 3: //plusabsmin
-			// {
-			// 	printf("Warning: test only, to add min value at the end of output buf!\n");
-			// 	//This is for test purpose, we need to deal with bitmap
-			// 	short min_value =
-			// 	for (int i = 0; i < m; i++)
-			// 	{
-			// 	}
-			// 	for (int i = 0; i < m; i++)
-			// 	{
-			// 		inbuf_ushort[i] = abs(inbuf_short[i]);
-			// 	}
-			// 	break;
-			// }
 			default:
 				printf("Not supported cd_values[1] !\n");
 				goto error;
@@ -221,58 +291,37 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 			free(inbuf_ushort);
 			inbuf_ushort = NULL;
 
-			t = clock() - t;
-
-			double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
-			printf("p4nenc16() took %f seconds to execute \n", time_taken);
-			printf("H5TurboPfor Code: ratio = %f, origSize =%zu, compSize = %zu byte \n", (float)n / (float)l, n, l);
-
+			//We need to attach A at the end
+			if (cd_values[1] == 2)
+			{
+				//out =  A_n  : A[0] A[1] -- A[A_n] :  out  --  out + l
+				unsigned char *out_old = out;
+				unsigned char *out_new = (unsigned char *)malloc(sizeof(int32_t) + sizeof(int32_t) * A_n + l);
+				memcpy(out_new, &A_n, sizeof(int32_t));
+				memcpy(out_new + sizeof(int32_t), A, sizeof(int32_t) * A_n);
+				memcpy(out_new + sizeof(int32_t) + sizeof(int32_t) * A_n, out, l);
+				out = out_new;
+				free(out_old);
+				l = sizeof(int32_t) + sizeof(int32_t) * A_n + l;
+				free(A);
+			}
 			break;
 		}
 		default:
 			printf("Not supported data type yet !\n");
 			goto error;
 		}
+
+		t = clock() - t;
+		double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
+		printf("H5TurboPfor: ratio = %f (origSize =%u, compSize = %u byte), cost %f seconds  \n", (float)n / (float)l, n, l, time_taken);
+
 		if (*buf != NULL)
 			free(*buf);
 		*buf = out;
 		*buf_size = l;
 		ret_value = l;
-		/*
-		int aggression;
-		if (cd_nelmts > 0)
-			aggression = (int)cd_values[0];
-		else
-			aggression = ZSTD_CLEVEL_DEFAULT;
-		if (aggression < 1 )
-			aggression = 1 ;
-		else if (aggression > ZSTD_maxCLevel())
-			aggression = ZSTD_maxCLevel();
-
-		size_t compSize = ZSTD_compressBound(origSize);
-		if (NULL == (outbuf = malloc(compSize)))
-			goto error;
-		clock_t t;
-		t = clock();
-
-		compSize = ZSTD_compress(outbuf, compSize, inbuf, origSize, aggression);
-		t = clock() - t;
-
-		double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
-
-		printf("fun() took %f seconds to execute \n", time_taken);
-
-		printf(" aggression = %d, origSize =%zu, compSize = %zu \n", aggression, origSize, compSize);
-		if (*buf != NULL)
-			free(*buf);
-		*buf = outbuf;
-		*buf_size = compSize;
-		outbuf = NULL;
-		ret_value = compSize;
-		*/
 	}
-	//if (outbuf != NULL)
-	//	free(outbuf);
 	return ret_value;
 
 error:
