@@ -1,6 +1,142 @@
 # H5TurboPFor
 
-More to come soon!
+This software is part of the research paper:
+
+* **Real-time and post-hoc compression for data from distributed acoustic sensing**, Bin Dong, Alex Popescu, Ver ́onica Rodr ́ıguez Tribaldos, Suren Byna, Jonathan Ajo-Franklin, Kesheng Wu, and the Imperial Valley Dark Fiber Team. Submitted on Sept 2021.*
+
+
+Please see the Copyright and the License at the end of this doc
+
+A Simple Installation Guide
+
+The H5H5TurboPFor depends on HDF5 and TurboPFor.
+- Install HDF5 
+  
+  Please use 1.10.X (e.g. hdf5-1.10.7  https://www.hdfgroup.org/packages/hdf5-1107-source/)
+  The HDf5 1.12 has some issue with plug-in support.
+  After download, you can use the below steps to install it
+  ```console
+  > tar zxvf hdf5-1.10.7.tar.gz
+  > ./autogen.sh
+  > ./configure --prefix=$PWD/build --enable-parallel
+  > make 
+  > make install
+  > export HDF5_HOME=$PWD/build
+
+  ```
+  If on NERSC machine or machine with HDF5 as module
+  Just use the pre-compiled HDF5 
+  ```console
+  > module load cray-hdf5-parallel/1.10.5.2
+  ```
+- Install TurboPFor
+   
+  ```console
+  > git clone https://github.com/powturbo/TurboPFor-Integer-Compression.git
+  > cd TurboPFor-Integer-Compression
+  > "edit the makefile and add below lines to create an installation in $PWD/build"
+  
+      INSTALL_PATH = $(PWD)/build
+
+      ...
+      install: libic.a
+            mkdir -p $(INSTALL_PATH)/lib
+            mkdir -p $(INSTALL_PATH)/include
+            cp ./libic.a $(INSTALL_PATH)/lib/
+            cp ./*.h   $(INSTALL_PATH)/include/
+  
+  > make
+  > make install 
+  ```
+   
+- Install H5H5TurboPFor
+  
+  ```console
+  > git clone https://github.com/berkeleysdm/H5TurboPFor.git
+  > cd H5TurboPFor
+  > "edit the CMakeLists.txt files for proper installtaion of TurboPFor"
+   
+    set(turbopfor_ROOT_DIR /Users/dbin/work/soft/TurboPFor-Integer-Compression-New/build) 
+  
+    Note: the defualt installation directory is set as $PWD/build.
+    You can adjust it if you want
+    
+    set(PLUGIN_INSTALL_PATH "./build" CACHE PATH "Where to install the dynamic HDF5-plugin")
+  
+  > cmake .
+  > make
+  > make install
+  > export H5TurboPFor_HOME=$PWD/build
+
+  ```
+  
+Usage:
+
+Based on the H5TurboPFor_HOME and HDF5_HOME set above
+
+```console
+> export HDF5_PLUGIN_PATH=$HDF5_PLUGIN_PATH:$H5TurboPFor_HOME/lib
+> export LD_LIBRARY_PATH=$HDF5_PLUGIN_PATH:$HDF5_HOME/lib
+> export DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH
+
+The DYLD_LIBRARY_PATH may be needed only on MacOS
+```
+
+The blow is the minimum code to use the H5TurboPFor
+
+```C
+   unsigned int filter_flags = H5Z_FLAG_MANDATORY;
+   H5Z_filter_t filter_id = 62016;
+   hid_t create_dcpl_id = H5Pcreate(H5P_DATASET_CREATE);
+
+   * @param cd_values: the pointer of the parameter 
+   * 			cd_values[0]: type of data:  short (0),  int (1)
+   *          cd_values[1]: 0/1 pre-processing method: zipzag  
+   *          cd_values[2, -]: size of each dimension of a chunk 
+   filter_cd_nelmts = 4
+   filter_cd_values[0] = 0;
+   filter_cd_values[1] = 1;
+   filter_cd_values[2] = 100;
+   filter_cd_values[3] = 100;
+
+   H5Pset_filter(create_dcpl_id, filter_id, filter_flags, filter_cd_nelmts, filter_cd_values);
+   endpoint_ranks = 2;
+   filter_chunk_size[0] = 100;
+   filter_chunk_size[1] = 100;
+   H5Pset_chunk(create_dcpl_id, endpoint_ranks, filter_chunk_size);
+   
+   did = H5Dcreate(fid, "FNAME", "FILE DISK TYPE", "DATA SPACE", H5P_DEFAULT, create_dcpl_id, H5P_DEFAULT);
+   
+ ```
+ 
+
+ A parallel implementation specifically for DAS data is avaiable 
+ 
+ ```console
+ https://bitbucket.org/dbin_sdm/dassa/src/master/
+ ```
+ 
+ 
+****************************
+
+H5TurboPFor Copyright (c) 2021, The Regents of the University of
+California, through Lawrence Berkeley National Laboratory (subject
+to receipt of any required approvals from the U.S. Dept. of Energy). 
+All rights reserved.
+
+If you have questions about your rights to use or distribute this software,
+please contact Berkeley Lab's Intellectual Property Office at
+IPO@lbl.gov.
+
+NOTICE.  This Software was developed under funding from the U.S. Department
+of Energy and the U.S. Government consequently retains certain rights.  As
+such, the U.S. Government has been granted for itself and others acting on
+its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the
+Software to reproduce, distribute copies to the public, prepare derivative 
+works, and perform publicly and display publicly, and to permit others to do so.
+
+
+****************************
 
 *** License Agreement ***
 
