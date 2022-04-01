@@ -61,7 +61,7 @@ Please see the Copyright and the License at the end of this doc
   
 # Usage in Python, Jupytor Notebook, and C/C++
 
-Note: please make sure you have ran "source setup.sh" and run python/jupyter-notebook with the same terminal to avoid issues like "ValueError: Unknown compression filter number: 62016"
+Note: please make sure you have ran "source setup.sh" and then start python/jupyter-notebook with the same terminal to avoid issues like ***"ValueError: Unknown compression filter number: 62016"***
 
 
 ### (1) Python 
