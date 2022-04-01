@@ -10,11 +10,10 @@ Please see the Copyright and the License at the end of this doc
 ***Installation Guide***
 
 The H5H5TurboPFor depends on HDF5 and TurboPFor.
-- Install HDF5 (Skip it if you have it)
+
+- Install HDF5 (skip if you already have it)
   
-  Please use 1.10.X (e.g. hdf5-1.10.7  https://www.hdfgroup.org/packages/hdf5-1107-source/)
-  The HDf5 1.12 has some issue with plug-in support.
-  After download, you can use the below steps to install it
+  Please use 1.10.X (e.g. hdf5-1.10.7  https://www.hdfgroup.org/packages/hdf5-1107-source/). The HDf5 1.12 has issues with plug-in support. Below are some steps to install it
   ```console
   > tar zxvf hdf5-1.10.7.tar.gz
   > ./autogen.sh
@@ -25,7 +24,7 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   > export HDF5_HOME=$PWD/build
 
   ```
-  If on NERSC machine or machine with HDF5 as module
+  If on NERSC machine or machine with HDF5 as module. 
   Just use the pre-compiled HDF5 
   ```console
   > module load cray-hdf5-parallel/1.10.5.2
@@ -39,10 +38,10 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   > export TurboPFor_HOME=$PWD
   ```
    
-- Install H5H5TurboPFor
+- Install H5TurboPFor
   
   ```console
-  > git clone https://github.com/berkeleysdm/H5TurboPFor.git
+  > git clone https://github.com/dbinlbl/H5TurboPFor.git
   > cd H5TurboPFor
   > cmake .
   > make
@@ -52,11 +51,11 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
    Note:
    (1) You may want to edit the CMakeLists.txt files for proper installtaion of TurboPFor
    
-    set(turbopfor_ROOT_DIR /Users/dbin/work/soft/TurboPFor-Integer-Compression-New/) 
+     set(turbopfor_ROOT_DIR $ENV{TurboPFor_HOME})
   
    (2)the default installation directory is set as $PWD/build.
     You can adjust it if you want
-    
+
     set(PLUGIN_INSTALL_PATH "./build" CACHE PATH "Where to install the dynamic HDF5-plugin")
   ```
   

@@ -32,7 +32,7 @@ find_package(MPI REQUIRED)
 ##
 ## Change here for a different place of TurboPFor-Integer-Compression
 ##
-set(turbopfor_ROOT_DIR ./TurboPFor-Integer-Compression)
+set(turbopfor_ROOT_DIR $ENV{TurboPFor_HOME})
 find_path(turbopfor_INCLUDE_DIRS
   NAMES vp4.h
   HINTS ${turbopfor_ROOT_DIR}/)
