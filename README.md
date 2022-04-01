@@ -7,10 +7,10 @@ This software is part of the research paper:
 
 Please see the Copyright and the License at the end of this doc
 
-A Simple Installation Guide
+***Installation Guide***
 
 The H5H5TurboPFor depends on HDF5 and TurboPFor.
-- Install HDF5 
+- Install HDF5 (Skip it if you have it)
   
   Please use 1.10.X (e.g. hdf5-1.10.7  https://www.hdfgroup.org/packages/hdf5-1107-source/)
   The HDf5 1.12 has some issue with plug-in support.
@@ -18,7 +18,8 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   ```console
   > tar zxvf hdf5-1.10.7.tar.gz
   > ./autogen.sh
-  > ./configure --prefix=$PWD/build --enable-parallel
+  > ./configure --prefix=$PWD/build 
+    # You may need "--enable-parallel CC=mpicc" to enable parallel version
   > make 
   > make install
   > export HDF5_HOME=$PWD/build
@@ -34,19 +35,8 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   ```console
   > git clone https://github.com/powturbo/TurboPFor-Integer-Compression.git
   > cd TurboPFor-Integer-Compression
-  > "edit the makefile and add below lines to create an installation in $PWD/build"
-  
-      INSTALL_PATH = $(PWD)/build
-
-      ...
-      install: libic.a
-            mkdir -p $(INSTALL_PATH)/lib
-            mkdir -p $(INSTALL_PATH)/include
-            cp ./libic.a $(INSTALL_PATH)/lib/
-            cp ./*.h   $(INSTALL_PATH)/include/
-  
   > make
-  > make install 
+  > export TurboPFor_HOME=$PWD
   ```
    
 - Install H5H5TurboPFor
@@ -54,24 +44,30 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   ```console
   > git clone https://github.com/berkeleysdm/H5TurboPFor.git
   > cd H5TurboPFor
-  > "edit the CMakeLists.txt files for proper installtaion of TurboPFor"
-   
-    set(turbopfor_ROOT_DIR /Users/dbin/work/soft/TurboPFor-Integer-Compression-New/build) 
-  
-    Note: the defualt installation directory is set as $PWD/build.
-    You can adjust it if you want
-    
-    set(PLUGIN_INSTALL_PATH "./build" CACHE PATH "Where to install the dynamic HDF5-plugin")
-  
   > cmake .
   > make
   > make install
-  > export H5TurboPFor_HOME=$PWD/build
+  > export H5TurboPFor_HOME=$PWD
 
+   Note:
+   (1) You may want to edit the CMakeLists.txt files for proper installtaion of TurboPFor
+   
+    set(turbopfor_ROOT_DIR /Users/dbin/work/soft/TurboPFor-Integer-Compression-New/) 
+  
+   (2)the default installation directory is set as $PWD/build.
+    You can adjust it if you want
+    
+    set(PLUGIN_INSTALL_PATH "./build" CACHE PATH "Where to install the dynamic HDF5-plugin")
   ```
   
-Usage:
+***Usage:***
 
+(1) Python 
+
+(2) Jupytor Notebook
+
+(3) Embed in your C/C++ code
+ 
 Based on the H5TurboPFor_HOME and HDF5_HOME set above
 
 ```console
@@ -110,7 +106,7 @@ The blow is the minimum code to use the H5TurboPFor
  ```
  
 
- A parallel implementation specifically for DAS data is avaiable 
+ (4) A parallel implementation specifically for DAS data is avaiable 
  
  ```console
  https://bitbucket.org/dbin_sdm/dassa/src/master/

@@ -80,22 +80,22 @@ short zz_unmap(unsigned short n)
 
 /**
  * @brief the filter for Turbopfor
- * 
+ *
  * @param flags : is set by HDF5 for decompress or compress
  * @param cd_nelmts: the # of values in  cd_values
- * @param cd_values: the pointer of the parameter 
+ * @param cd_values: the pointer of the parameter
  * 			cd_values[0]: type of data:  short (0),  int (1)
- *          cd_values[1]: pre-processing method: 
+ *          cd_values[1]: pre-processing method:
  *                        0: nothing
- *                        1: zipzag  
+ *                        1: zipzag
  *                        2: abs
  *                        3: plusabsmin
- *  
- *          cd_values[2, -]: size of each dimension of a chunk 
+ *
+ *          cd_values[2, -]: size of each dimension of a chunk
  * @param nbytes : input data size
- * @param buf_size : output data size 
+ * @param buf_size : output data size
  * @param buf : the pointer to data buffer
- * @return size_t 
+ * @return size_t
  */
 DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 								   const unsigned int cd_values[], size_t nbytes,
@@ -104,12 +104,14 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 
 	size_t ret_value = 0;
 	size_t origSize = nbytes; /* Number of bytes for output (compressed) buffer */
+#ifdef DEBUG
 	printf("cd_nelmts = %zu, cd_values = ", cd_nelmts);
 	for (int i = 0; i < cd_nelmts; i++)
 	{
 		printf("%d , ", cd_values[i]);
 	}
 	printf("\n");
+#endif
 
 	unsigned m = 1;
 	unsigned n, l;
@@ -119,13 +121,15 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 		m = m * cd_values[i];
 	}
 
-	//unsigned char *A_bitmap_compressed;
-	//unsigned A_bitmap_compressed_size;
+	// unsigned char *A_bitmap_compressed;
+	// unsigned A_bitmap_compressed_size;
 
 	int32_t *A;
 	int A_n;
+#ifdef DEBUG
 	clock_t t;
 	t = clock();
+#endif
 	if (flags & H5Z_FLAG_REVERSE)
 	{
 		void *old_buf = *buf;
@@ -138,17 +142,17 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 
 			if (cd_values[1] == 2)
 			{
-				//unsigned char *buf_new;
+				// unsigned char *buf_new;
 				memcpy(&A_n, *buf, sizeof(int32_t));
 				A = malloc(sizeof(int32_t) * A_n);
 				memcpy(A, *buf + sizeof(int32_t), sizeof(int32_t) * A_n);
-				//memcpy(buf + sizeof(int32_t) + sizeof(int32_t) * A_n, l, out);
+				// memcpy(buf + sizeof(int32_t) + sizeof(int32_t) * A_n, l, out);
 				*buf = (char *)*buf + sizeof(int32_t) + sizeof(int32_t) * A_n;
-				//printf("Debug: decode A_n = %d, A[0, 1, 3]= %d, %d, %d\n", A_n, A[0], A[1], A[2]);
+				// printf("Debug: decode A_n = %d, A[0, 1, 3]= %d, %d, %d\n", A_n, A[0], A[1], A[2]);
 			}
 
 			p4ndec16((unsigned char *)*buf, m, (uint16_t *)outbuf_short);
-			//unsigned short *inbuf_ushort = (unsigned short *)out;
+			// unsigned short *inbuf_ushort = (unsigned short *)out;
 			n = m * sizeof(short);
 			out = (unsigned char *)malloc(n);
 			unsigned short *ushort_p = (unsigned short *)outbuf_short;
@@ -168,7 +172,7 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 				printf("Warning: test only !\n");
 				memcpy(ushort_p, short_p, m * sizeof(unsigned short));
 				break;
-			case 1: //zigzag
+			case 1: // zigzag
 			{
 				for (int i = 0; i < m; i++)
 				{
@@ -176,11 +180,11 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 				}
 				break;
 			}
-			case 2: //abs
+			case 2: // abs
 			{
 				for (int i = 0; i < m; i++)
 				{
-					if (TestBit(A, i)) //Get bit for the positive value: 1
+					if (TestBit(A, i)) // Get bit for the positive value: 1
 					{
 						short_p[i] = ushort_p[i];
 					}
@@ -206,10 +210,11 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 			goto error;
 		}
 
+#ifdef DEBUG
 		t = clock() - t;
 		double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
 		printf("H5TurboPfor dec : cost %f seconds  \n", time_taken);
-
+#endif
 		if (old_buf != NULL)
 			free(old_buf);
 		*buf = out;
@@ -230,7 +235,7 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 				printf("Warning: test only !\n");
 				memcpy(inbuf_ushort, inbuf_short, m * sizeof(unsigned short));
 				break;
-			case 1: //zigzag
+			case 1: // zigzag
 			{
 				for (int i = 0; i < m; i++)
 				{
@@ -238,9 +243,9 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 				}
 				break;
 			}
-			case 2: //abs
+			case 2: // abs
 			{
-				//int A_n;
+				// int A_n;
 				if (m % 32 == 0)
 				{
 					A_n = m / 32;
@@ -249,18 +254,18 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 				{
 					A_n = m / 32 + 1;
 				}
-				//printf("A_n = %d !\n", A_n);
-				//int32_t A[A_n];
+				// printf("A_n = %d !\n", A_n);
+				// int32_t A[A_n];
 				A = malloc(sizeof(int32_t) * A_n);
 
 				for (int i = 0; i < A_n; i++)
 					A[i] = 0; // Clear the bit array
 
-				//printf("Warning: test only , to add bit array at the end of output buf!\n");
-				//This is for test purpose, we need to deal with bitmap
+				// printf("Warning: test only , to add bit array at the end of output buf!\n");
+				// This is for test purpose, we need to deal with bitmap
 				for (int i = 0; i < m; i++)
 				{
-					if (inbuf_short[i] >= 0) //Set bit for the positive value to be 1
+					if (inbuf_short[i] >= 0) // Set bit for the positive value to be 1
 					{
 						SetBit(A, i);
 						inbuf_ushort[i] = inbuf_short[i];
@@ -270,15 +275,15 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 						inbuf_ushort[i] = -inbuf_short[i];
 					}
 				}
-
+#ifdef DEBUG
 				printf("Debug: decode A_n = %d, A[0, 1, 3]= %d, %d, %d\n", A_n, A[0], A[1], A[2]);
-
-				//Compress A does not help here
-				//unsigned char *A_bitmap_compressed = (unsigned char *)malloc(CBUF(A_n * sizeof(int32_t)) + 1024 * 1024);
-				//A_bitmap_compressed_size is the byte (n is byte too)
-				//A_bitmap_compressed_size = p4nenc32(A, A_n, A_bitmap_compressed);
-				//printf("Bitmap: ratio = %f (origSize =%zu, compSize = %zu byte) \n", (float)(A_n * 4) / (float)A_bitmap_compressed_size, A_n * 4, A_bitmap_compressed_size);
-				//free(A_bitmap_compressed);
+#endif
+				// Compress A does not help here
+				// unsigned char *A_bitmap_compressed = (unsigned char *)malloc(CBUF(A_n * sizeof(int32_t)) + 1024 * 1024);
+				// A_bitmap_compressed_size is the byte (n is byte too)
+				// A_bitmap_compressed_size = p4nenc32(A, A_n, A_bitmap_compressed);
+				// printf("Bitmap: ratio = %f (origSize =%zu, compSize = %zu byte) \n", (float)(A_n * 4) / (float)A_bitmap_compressed_size, A_n * 4, A_bitmap_compressed_size);
+				// free(A_bitmap_compressed);
 				break;
 			}
 			default:
@@ -287,14 +292,14 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 			}
 
 			out = (unsigned char *)malloc(CBUF(n) + 1024 * 1024);
-			l = p4nenc16(inbuf_ushort, m, out); //l is the byte (n is byte too)
+			l = p4nenc16(inbuf_ushort, m, out); // l is the byte (n is byte too)
 			free(inbuf_ushort);
 			inbuf_ushort = NULL;
 
-			//We need to attach A at the end
+			// We need to attach A at the end
 			if (cd_values[1] == 2)
 			{
-				//out =  A_n  : A[0] A[1] -- A[A_n] :  out  --  out + l
+				// out =  A_n  : A[0] A[1] -- A[A_n] :  out  --  out + l
 				unsigned char *out_old = out;
 				unsigned char *out_new = (unsigned char *)malloc(sizeof(int32_t) + sizeof(int32_t) * A_n + l);
 				memcpy(out_new, &A_n, sizeof(int32_t));
@@ -312,9 +317,11 @@ DLL_EXPORT size_t turbopfor_filter(unsigned int flags, size_t cd_nelmts,
 			goto error;
 		}
 
+#ifdef DEBUG
 		t = clock() - t;
 		double time_taken = ((double)t) / CLOCKS_PER_SEC; // in seconds
 		printf("H5TurboPfor: ratio = %f (origSize =%u, compSize = %u byte), cost %f seconds  \n", (float)n / (float)l, n, l, time_taken);
+#endif
 
 		if (*buf != NULL)
 			free(*buf);
