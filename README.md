@@ -47,7 +47,7 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   > make
   > make install
   > source setup.sh   ##setup the path to load the H5TurboPFor
-  
+
    Note:
    (1) You may want to edit the CMakeLists.txt files for proper installtaion of TurboPFor
    
@@ -62,8 +62,26 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
 ***Usage:***
 
 (1) Python 
+ 
+```python
+> python3 py-example.py
+> h5dump -pH das_example_compressed.h5
 
+HDF5 "das_example_compressed.h5" {
+GROUP "/" {
+   DATASET "Acoustic" {
+      DATATYPE  H5T_STD_I16LE
+      DATASPACE  SIMPLE { ( 30000, 21 ) / ( 30000, 21 ) }
+      STORAGE_LAYOUT {
+         CHUNKED ( 30000, 21 )
+         SIZE 668260 (1.885:1 COMPRESSION)
+      }
+     ... ...
+}}}
+```
 (2) Jupytor Notebook
+
+Please see the H5TurboPFor-Example-Jupyter.ipynb for the example
 
 (3) Embed in your C/C++ code
  
@@ -105,7 +123,7 @@ The blow is the minimum code to use the H5TurboPFor
  ```
  
 
- (4) A parallel implementation specifically for DAS data is avaiable 
+ (4) A parallel implementation specifically for DAS data is available in DASSA
  
  ```console
  https://bitbucket.org/dbin_sdm/dassa/src/master/
