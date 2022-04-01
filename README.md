@@ -46,8 +46,8 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   > cmake .
   > make
   > make install
-  > export H5TurboPFor_HOME=$PWD
-
+  > source setup.sh   ##setup the path to load the H5TurboPFor
+  
    Note:
    (1) You may want to edit the CMakeLists.txt files for proper installtaion of TurboPFor
    
