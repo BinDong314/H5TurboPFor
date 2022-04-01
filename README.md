@@ -7,9 +7,9 @@ This software is part of the research paper:
 
 Please see the Copyright and the License at the end of this doc
 
-***Installation Guide***
+# Installation Guide
 
-The H5H5TurboPFor depends on HDF5 and TurboPFor.
+### Dependents: HDF5 and TurboPFor.
 
 - Install HDF5 (skip if you already have it)
   
@@ -38,7 +38,7 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
   > export TurboPFor_HOME=$PWD
   ```
    
-- Install H5TurboPFor
+### Install H5TurboPFor
   
   ```console
   > git clone https://github.com/dbinlbl/H5TurboPFor.git
@@ -59,9 +59,9 @@ The H5H5TurboPFor depends on HDF5 and TurboPFor.
     set(PLUGIN_INSTALL_PATH "./build" CACHE PATH "Where to install the dynamic HDF5-plugin")
   ```
   
-***Usage:***
+# Usage in Python, Jupytor Notebook, and C/C++
 
-(1) Python 
+### (1) Python 
  
 ```python
 > python3 py-example.py
@@ -79,11 +79,11 @@ GROUP "/" {
      ... ...
 }}}
 ```
-(2) Jupytor Notebook
+### (2) Jupytor Notebook
 
-Please see the H5TurboPFor-Example-Jupyter.ipynb for the example
+Please see the [H5TurboPFor-Example-Jupyter.ipynb](H5TurboPFor-Example-Jupyter.ipynb)  for the example
 
-(3) Embed in your C/C++ code
+### (3) Embed in your C/C++ code
  
 Based on the H5TurboPFor_HOME and HDF5_HOME set above
 
@@ -123,7 +123,7 @@ The blow is the minimum code to use the H5TurboPFor
  ```
  
 
- (4) A parallel implementation specifically for DAS data is available in DASSA
+ ### (4) A parallel implementation specifically for DAS data is available in DASSA
  
  ```console
  https://bitbucket.org/dbin_sdm/dassa/src/master/
