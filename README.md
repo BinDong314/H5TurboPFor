@@ -88,6 +88,9 @@ Please see the [H5TurboPFor-Example-Jupyter.ipynb](H5TurboPFor-Example-Jupyter.i
 
 ### (3) h5repack
 
+Error is h5repack: "UD=62016,0,4,0,1,30000,21" v.s. "UD=62016,4,0,1,30000,21"
+Based on the h5repack doc [h5repack](https://support.hdfgroup.org/HDF5/doc1.8/RM/Tools.html#Tools-Repack). Don't know why there is extra "0" after "62016" to make it work .
+
 ```console
 > h5repack -f UD=62016,0,4,0,1,30000,21  das_example.h5  das_example_rpk.h5
 > h5dump -pH das_example_rpk.h5
