@@ -5,6 +5,8 @@
 
 #define TURBOPFOR_FILTER 62016
 
+//#define DEBUG 1
+
 #include "bitpack.h"
 #include "vp4.h"
 #include "vint.h"

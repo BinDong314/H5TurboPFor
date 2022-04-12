@@ -86,7 +86,36 @@ GROUP "/" {
 
 Please see the [H5TurboPFor-Example-Jupyter.ipynb](H5TurboPFor-Example-Jupyter.ipynb)  for the example
 
-### (3) Embed in your C/C++ code
+### (3) h5repack
+
+```console
+> h5repack -f UD=62016,0,4,0,1,30000,21  das_example.h5  das_example_rpk.h5
+> h5dump -pH das_example_rpk.h5
+HDF5 "das_example_rpk.h5" {
+GROUP "/" {
+   DATASET "Acoustic" {
+      DATATYPE  H5T_STD_I16LE
+      DATASPACE  SIMPLE { ( 30000, 21 ) / ( 30000, 21 ) }
+      STORAGE_LAYOUT {
+         CHUNKED ( 30000, 21 )
+         SIZE 668260 (1.885:1 COMPRESSION)
+      }
+      FILTERS {
+         USER_DEFINED_FILTER {
+            FILTER_ID 62016
+            COMMENT TurboPFor-Integer-Compression: https://github.com/dbinlbl/H5TurboPFor
+            PARAMS { 0 1 30000 21 }
+         }
+      }
+      FILLVALUE {
+         FILL_TIME H5D_FILL_TIME_IFSET
+         VALUE  H5D_FILL_VALUE_DEFAULT
+      }
+      ALLOCATION_TIME {
+         H5D_ALLOC_TIME_INCR
+}}}}
+```
+### (4) Embed in your C/C++ code
  
 Based on the H5TurboPFor_HOME and HDF5_HOME set above
 
