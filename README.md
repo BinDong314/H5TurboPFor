@@ -84,7 +84,9 @@ GROUP "/" {
 ```
 ### (2) Jupytor Notebook
 
-Please see the [H5TurboPFor-Example-Jupyter.ipynb](H5TurboPFor-Example-Jupyter.ipynb)  for the example
+Please see the [H5TurboPFor-Example-Jupyter.ipynb](H5TurboPFor-Example-Jupyter.ipynb) for the example
+About how to install Jupytor Notebook: https://jupyter.org/
+
 
 ### (3) h5repack
 
